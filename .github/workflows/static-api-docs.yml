@@ -41,7 +41,36 @@ jobs:
       - name: Generate matrix from matching refs
         id: refs
         run: |
-          echo 'refs=["foo", "bar"]' >> "$GITHUB_OUTPUT"
+          # This is the regex for matching tags that need docs generated.
+          DOCS_TAG_REGEX="^docs-.*$"
+
+          echo "Fetching tags..."
+          tags=$(git tag -l | grep -E "$DOCS_TAG_REGEX" || true)
+
+          refs=""
+
+          if [ ! -z "$tags" ]; then
+            while IFS= read -r tag; do
+              if [ ! -z "$tag" ]; then
+                refs="$refs\"$tag\","
+              fi
+            done <<< "$tags"
+          fi
+
+          # Remove trailing comma and wrap in array brackets
+          if [ ! -z "$refs" ]; then
+            refs=${refs%,}  # Remove last comma
+            matrix_json="[${refs}]"
+          else
+            matrix_json="[]"
+          fi
+
+          echo "Generated matrix: $matrix_json"
+          echo "refs=$matrix_json" >> $GITHUB_OUTPUT
+
+          # Also output individual components for debugging
+          echo "Matching tags:"
+          echo "$tags"
 
   # build documentation from each ref
   build-docs:
