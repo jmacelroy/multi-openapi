@@ -1,0 +1,213 @@
+# Workflow for building OpenAPI static html docs and deploying to github pages.
+name: Deploy OpenAPI static html docs
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+# get all the tags and put them in a matrix
+# checkout out each tag from the matrix, build the static html and upload it.
+# build the index html from the tag and upload it.
+# get done
+
+jobs:
+  # generate a matrix of all refs with a matching tag scheme
+  generate-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      pages: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate matrix from matching refs
+        id: set-matrix
+        run: |
+          echo 'pages=["foo", "bar"]' >> "$GITHUB_OUTPUT"
+
+  # build documentation from each ref
+  build-docs:
+    runs-on: ubuntu-latest
+    needs: generate-matrix
+    if: ${{ fromJSON(needs.generate-matrix.outputs.matrix)[0] != null }}
+    strategy:
+      matrix:
+        page: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build documentation
+        run: |
+          echo "Building docs for ${{ matrix.ref }}"
+          mkdir -p docs-output/${{ matrix.ref }}
+          cp ${{ matrix.ref }}.html docs-ouptut/${{ matrix.ref }}
+
+      - name: Upload docs artifact
+        uses: actions:upload-artifact@v4
+        with:
+          name: docs-${{ matrix.ref }}
+          path: docs-output/${{ matrix.ref }}/
+          retention-days: 1
+
+  create-docs-index:
+    runs-on: ubuntu
+    needs: [generate-matrix, build-docs]
+    if: ${{ fromJSON(needs.generate-matrix.outputs.matrix)[0] != null }}
+    steps:
+      - name: Download all documentation artifacts
+        uses: action/download-artifact@v4
+        with:
+          path: all-docs/
+          pattern: docs-*
+          merge-multiple: false
+
+      - name: Generate documentation index
+        run: |
+          mkdir -p docs
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Documentation Index</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      max-width: 800px;
+                      margin: 0 auto;
+                      padding: 20px;
+                      background-color: #f5f5f5;
+                  }
+                  .container {
+                      background: white;
+                      padding: 30px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                  }
+                  h1 {
+                      color: #333;
+                      border-bottom: 2px solid #007acc;
+                      padding-bottom: 10px;
+                  }
+                  .docs-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                      gap: 15px;
+                      margin-top: 20px;
+                  }
+                  .doc-card {
+                      border: 1px solid #ddd;
+                      border-radius: 6px;
+                      padding: 15px;
+                      background: #f9f9f9;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                  }
+                  .doc-card:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                  }
+                  .doc-link {
+                      text-decoration: none;
+                      color: #007acc;
+                      font-weight: 500;
+                      font-size: 16px;
+                  }
+                  .doc-link:hover {
+                      color: #005a99;
+                  }
+                  .doc-type {
+                      font-size: 12px;
+                      background: #007acc;
+                      color: white;
+                      padding: 2px 6px;
+                      border-radius: 3px;
+                      margin-left: 8px;
+                  }
+                  .build-info {
+                      color: #666;
+                      font-size: 12px;
+                      margin-top: 20px;
+                      text-align: center;
+                      border-top: 1px solid #eee;
+                      padding-top: 15px;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>📚 Documentation Index</h1>
+                  <p>Available documentation for all branches and tags:</p>
+                  
+                  <div class="docs-grid">
+          EOF
+
+          # Process each documentation artifact
+          for doc_dir in all-docs/docs-*/; do
+            if [ -d "$doc_dir" ]; then
+              # Extract ref name from directory name (remove 'docs-' prefix)
+              ref_name=$(basename "$doc_dir" | sed 's/^docs-//')
+              
+              # Determine if it's a branch or tag
+              doc_type="branch"
+              if [[ "$ref_name" =~ ^v[0-9] ]]; then
+                doc_type="tag"
+              fi
+              
+              # Copy docs to public directory
+              cp -r "$doc_dir" "public/$ref_name"
+              
+              # Add entry to index.html
+              cat >> public/index.html << EOF
+                      <div class="doc-card">
+                          <a href="./$ref_name/" class="doc-link">$ref_name</a>
+                          <span class="doc-type">$doc_type</span>
+                      </div>
+          EOF
+            fi
+          done
+
+          # Close HTML
+          cat >> public/index.html << EOF
+                  </div>
+                  
+                  <div class="build-info">
+                      <p>Generated on $(date) | Repository: ${{ github.repository }}</p>
+                      <p>Workflow run: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.run_id }}</a></p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+
+          echo "Generated index.html with $(ls -1 all-docs/docs-*/ | wc -l) documentation links"
+
+      - name: Upload complete documentation site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "public" # must be a directory
+
+      - name: Deploy to GitHub Pages
+        id: pages-deployment
+        uses: actions/deploy-pages@v4
