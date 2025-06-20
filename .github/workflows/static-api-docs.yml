@@ -83,7 +83,7 @@ jobs:
 
       - name: Generate documentation index
         run: |
-          mkdir -p docs
+          mkdir -p public
           cat > public/index.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
