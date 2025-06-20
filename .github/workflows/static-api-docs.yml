@@ -168,7 +168,7 @@ jobs:
               # Extract ref name from directory name (remove 'docs-' prefix)
               ref_name=$(basename "$doc_dir" | sed 's/^docs-//')
 
-              doc_type="tag"
+              doc_type="implementation"
 
               # Copy docs to public directory
               cp -r "$doc_dir" "public/$ref_name"
