@@ -5,8 +5,6 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -43,7 +41,7 @@ jobs:
       - name: Generate matrix from matching refs
         id: refs
         run: |
-          echo 'pages=["foo", "bar"]' >> "$GITHUB_OUTPUT"
+          echo 'refs=["foo", "bar"]' >> "$GITHUB_OUTPUT"
 
   # build documentation from each ref
   build-docs:
