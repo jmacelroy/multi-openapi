@@ -70,9 +70,15 @@ jobs:
 
   create-docs-index:
     runs-on: ubuntu
-    needs: [generate-matrix, build-docs]
+    needs:
+      - generate-matrix
+      - build-docs
+
     if: ${{ fromJSON(needs.generate-matrix.outputs.refs)[0] != null }}
     steps:
+      - name: Display structure
+        run: ls -R
+
       - name: Download all documentation artifacts
         uses: actions/download-artifact@v4
         with:
