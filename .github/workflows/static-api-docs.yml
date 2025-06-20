@@ -77,7 +77,7 @@ jobs:
     if: ${{ fromJSON(needs.generate-matrix.outputs.matrix)[0] != null }}
     steps:
       - name: Download all documentation artifacts
-        uses: action/download-artifact@v4
+        uses: actions/download-artifact@v4
         with:
           path: all-docs/
           pattern: docs-*
@@ -160,7 +160,7 @@ jobs:
               <div class="container">
                   <h1>📚 Documentation Index</h1>
                   <p>Available documentation for all branches and tags:</p>
-                  
+
                   <div class="docs-grid">
           EOF
 
@@ -169,16 +169,16 @@ jobs:
             if [ -d "$doc_dir" ]; then
               # Extract ref name from directory name (remove 'docs-' prefix)
               ref_name=$(basename "$doc_dir" | sed 's/^docs-//')
-              
+
               # Determine if it's a branch or tag
               doc_type="branch"
               if [[ "$ref_name" =~ ^v[0-9] ]]; then
                 doc_type="tag"
               fi
-              
+
               # Copy docs to public directory
               cp -r "$doc_dir" "public/$ref_name"
-              
+
               # Add entry to index.html
               cat >> public/index.html << EOF
                       <div class="doc-card">
@@ -192,7 +192,7 @@ jobs:
           # Close HTML
           cat >> public/index.html << EOF
                   </div>
-                  
+
                   <div class="build-info">
                       <p>Generated on $(date) | Repository: ${{ github.repository }}</p>
                       <p>Workflow run: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.run_id }}</a></p>
