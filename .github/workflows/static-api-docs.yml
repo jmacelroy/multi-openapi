@@ -156,8 +156,8 @@ jobs:
           </head>
           <body>
               <div class="container">
-                  <h1>📚 Documentation Index</h1>
-                  <p>Available documentation for all branches and tags:</p>
+                  <h1>📚 Hub Documentation Index</h1>
+                  <p>Available documentation for all tagged implementations:</p>
 
                   <div class="docs-grid">
           EOF
@@ -168,11 +168,7 @@ jobs:
               # Extract ref name from directory name (remove 'docs-' prefix)
               ref_name=$(basename "$doc_dir" | sed 's/^docs-//')
 
-              # Determine if it's a branch or tag
-              doc_type="branch"
-              if [[ "$ref_name" =~ ^v[0-9] ]]; then
-                doc_type="tag"
-              fi
+              doc_type="tag"
 
               # Copy docs to public directory
               cp -r "$doc_dir" "public/$ref_name"
@@ -180,7 +176,7 @@ jobs:
               # Add entry to index.html
               cat >> public/index.html << EOF
                       <div class="doc-card">
-                          <a href="./$ref_name/" class="doc-link">$ref_name</a>
+                          <a href="./$ref_name/${ref_name}.html" class="doc-link">$ref_name</a>
                           <span class="doc-type">$doc_type</span>
                       </div>
           EOF
