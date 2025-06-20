@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      pages: ${{ steps.set-matrix.outputs.matrix }}
+      refs: ${{ steps.refs.outputs.refs }}
 
     steps:
       - name: Checkout repository
@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Generate matrix from matching refs
-        id: set-matrix
+        id: refs
         run: |
           echo 'pages=["foo", "bar"]' >> "$GITHUB_OUTPUT"
 
@@ -51,8 +51,7 @@ jobs:
     needs: generate-matrix
     strategy:
       matrix:
-        page: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
-
+        ref: ${{ fromJSON(needs.generate-matrix.outputs.refs) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
