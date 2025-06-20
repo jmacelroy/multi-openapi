@@ -58,11 +58,8 @@ jobs:
       - name: Build documentation
         run: |
           echo "Building docs for ${{ matrix.ref }}"
-          mkdir docs-output
-          mkdir docs-output/${{ matrix.ref }}
-          stat ${{ matrix.ref }}.html
-          stat docs-output/${{ matrix.ref }}
-          cp ${{ matrix.ref }}.html docs-ouptut/${{ matrix.ref }}/${{ matrix.ref }}.html
+          mkdir -p docs-output/${{ matrix.ref }}
+          cat ${{ matrix.ref }}.html >> docs-output/${{ matrix.ref }}/${{ matrix.ref }}.html
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
