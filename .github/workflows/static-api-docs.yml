@@ -75,19 +75,14 @@ jobs:
       - build-docs
 
     steps:
+      - name: Download all documentation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-docs
+          merge-multiple: false
+
       - name: Display structure
-        run: |
-          echo "hi mom"
-          ls -R
-
-      # - name: Download all documentation artifacts
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: all-docs
-      #     merge-multiple: false
-
-      # - name: Display structure
-      #   run: ls -R
+        run: ls -R
 
       # - name: Generate documentation index
       #   run: |
