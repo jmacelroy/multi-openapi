@@ -33,6 +33,7 @@ jobs:
 
     outputs:
       pages: ${{ steps.set-matrix.outputs.matrix }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
