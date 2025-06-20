@@ -59,18 +59,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build documentation
-        run: |
-          echo "Building docs for ${{ matrix.ref }}"
-          mkdir -p docs-output/${{ matrix.ref }}
-          cp ${{ matrix.ref }}.html docs-ouptut/${{ matrix.ref }}
+      # - name: Build documentation
+      #   run: |
+      #     echo "Building docs for ${{ matrix.ref }}"
+      #     mkdir -p docs-output/${{ matrix.ref }}
+      #     cp ${{ matrix.ref }}.html docs-ouptut/${{ matrix.ref }}
 
-      - name: Upload docs artifact
-        uses: actions:upload-artifact@v4
-        with:
-          name: docs-${{ matrix.ref }}
-          path: docs-output/${{ matrix.ref }}/
-          retention-days: 1
+      # - name: Upload docs artifact
+      #   uses: actions:upload-artifact@v4
+      #   with:
+      #     name: docs-${{ matrix.ref }}
+      #     path: docs-output/${{ matrix.ref }}/
+      #     retention-days: 1
 
   # create-docs-index:
   #   runs-on: ubuntu
