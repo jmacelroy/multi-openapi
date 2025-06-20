@@ -69,7 +69,7 @@ jobs:
           retention-days: 1
 
   create-docs-index:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     needs:
       - generate-matrix
       - build-docs
