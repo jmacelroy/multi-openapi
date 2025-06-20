@@ -74,19 +74,20 @@ jobs:
       - generate-matrix
       - build-docs
 
-    if: ${{ fromJSON(needs.generate-matrix.outputs.refs)[0] != null }}
     steps:
       - name: Display structure
-        run: ls -R
+        run: |
+          echo "hi mom"
+          ls -R
 
-      - name: Download all documentation artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: all-docs
-          merge-multiple: false
+      # - name: Download all documentation artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     path: all-docs
+      #     merge-multiple: false
 
-      - name: Display structure
-        run: ls -R
+      # - name: Display structure
+      #   run: ls -R
 
       # - name: Generate documentation index
       #   run: |
